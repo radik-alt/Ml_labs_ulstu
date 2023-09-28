@@ -70,10 +70,7 @@ class Second:
         fig = plt.figure(figsize=(10, 6))
         ax = fig.add_subplot(111, projection='3d')
 
-        for i in range(len(x1)):
-            x1_val = x1[i]
-            y_vals = np.cos(x1_val + X2[i, :])  # Вычисляем значения y для данного x1 и всех x2
-            ax.plot(x1_val * np.ones_like(x2), x2, y_vals, color='b')
+        ax.plot_surface(X1, X2, Y, cmap='viridis')
 
         ax.set_xlabel('x1')
         ax.set_ylabel('x2')
