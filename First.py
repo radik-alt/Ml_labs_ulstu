@@ -4,7 +4,6 @@ from pandas import DataFrame
 
 
 class First:
-
     def __int__(self):
         print()
 
