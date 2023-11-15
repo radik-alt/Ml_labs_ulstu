@@ -2,9 +2,10 @@ import numpy as np
 from matplotlib import pyplot as plt
 from pandas import Series
 import pandas as pd
+from sklearn import datasets
 from sklearn.linear_model import LinearRegression, Ridge
-from sklearn.metrics import mean_squared_error
-from sklearn.model_selection import train_test_split
+from sklearn.metrics import mean_squared_error, r2_score
+from sklearn.model_selection import train_test_split, cross_val_score
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import PolynomialFeatures
 
@@ -14,40 +15,50 @@ class Third:
     def __init__(self):
         self.start_work()
 
-    def start_work(self):
-        df_training = pd.read_csv("winequality-red.csv", sep=";")
+    def true_fun(self, X):
+        return np.cos(1.5 * np.pi * X)
 
-        # X = df_training[
-        #     ["fixed acidity", "volatile acidity", "citric acid", "residual sugar", "chlorides", "free sulfur dioxide",
-        #      "total sulfur dioxide", "density", "pH", "sulphates", "alcohol"]].values
-        X = df_training["free sulfur dioxide"].values
+    def start_work(self):
+        df_training = pd.read_csv("winequality_white.csv", sep=";")
+        X = df_training[
+            ["fixed acidity", "volatile acidity", "citric acid", "residual sugar", "chlorides", "free sulfur dioxide",
+             "total sulfur dioxide", "density", "pH", "sulphates", "alcohol"]].values
         Y = df_training["quality"].values
 
-        # x_train, x_test, y_train, y_test = train_test_split(X, Y, test_size=0.2, random_state=0)
+        # X, Y = datasets.load_diabetes(return_X_y=True)
+        X = Y[:, np.newaxis]
 
         x_train, x_test, y_train, y_test = self.custom_train_test_split(X, Y)
-        self.polynomial_feature(
-            x_train.reshape((-1, 1)),
+        self.regression_model(
+            x_train,
             y_train,
-            x_test.reshape((-1, 1)),
+            x_test,
             y_test
         )
 
     def learn_train_model(self, x_train, y_train, x_test, y_test):
         model = LinearRegression()
 
+        print(x_test.shape)
+        print(y_test.shape)
+
         model.fit(x_train, y_train)
         y_pred = model.predict(x_test)
 
         mse = mean_squared_error(y_test, y_pred)
-        R = model.score(y_test.reshape((-1, 1)), y_pred)
+        R = r2_score(y_test, y_pred)
 
+        plt.figure(figsize=(8, 10))
+        plt.scatter(x_test, y_test, color="blue", label="Test Data")
+        plt.plot(x_test, y_pred, color="red", label="Predict Data")
+        plt.title("Line Regression")
+        plt.ylabel("Y")
+        plt.xlabel("X")
+        plt.show()
+
+        print("Coefficients: \n", model.coef_)
         print(f"Среднеквадратичная ошибка (MSE): {mse}")
         print(f"Кэф детерминизации: {R}")
-
-        plt.scatter(x_train, y_train, color="black")
-        plt.plot(x_test, y_pred, color="blue", linewidth=3)
-        plt.show()
 
     def custom_train_test_split(self, x: Series, y: Series, test_size=0.2, random_state=None, shuffle: bool = False):
         if random_state is not None:
@@ -70,42 +81,44 @@ class Third:
 
         return X_train, X_test, y_train, y_test
 
-    def polynomial_feature(self, X_train, y_train, X_test, y_test):
-        train_errors = []
-        test_errors = []
-        degrees = np.arange(1, 2, 5)
+    def polynomial_feature(self, x_train, y_train, x_test, y_test):
+        degrees = [5, 7]
 
-        for degree in degrees:
-            poly = PolynomialFeatures(degree=degree, include_bias=False)
-            X_train_poly = poly.fit_transform(X_train)
-            X_test_poly = poly.transform(X_test)
+        plt.figure(figsize=(14, 5))
+        for i in range(len(degrees)):
+            ax = plt.subplot(1, len(degrees), i + 1)
+            plt.setp(ax, xticks=(), yticks=())
 
-            model = LinearRegression()
-            model.fit(X_train_poly, y_train)
+            print(x_train.shape)
+            print(y_train.shape)
 
+            polynomial_features = PolynomialFeatures(degree=degrees[i], include_bias=False)
+            linear_regression = LinearRegression()
             pipeline = Pipeline(
                 [
-                    ("polynomial_features", poly),
-                    ("linear_regression", model),
+                    ("polynomial_features", polynomial_features),
+                    ("linear_regression", linear_regression),
                 ]
             )
 
-            y_train_pred = model.predict(X_train_poly)
-            y_test_pred = model.predict(X_test_poly)
+            pipeline.fit(x_train, y_train)
 
-            train_error = mean_squared_error(y_train, y_train_pred)
-            test_error = mean_squared_error(y_test, y_test_pred)
+            scores = cross_val_score(
+                pipeline, x_train, y_train, scoring="neg_mean_squared_error", cv=10
+            )
 
-            train_errors.append(train_error)
-            test_errors.append(test_error)
+            y_predict = pipeline.predict(x_test)
 
-        plt.figure(figsize=(10, 6))
-        plt.plot(degrees, train_errors, label='Train Error', marker='o')
-        plt.plot(degrees, test_errors, label='Test Error', marker='o')
-        plt.title('Зависимость ошибки от степени полинома')
-        plt.xlabel('Степень полинома')
-        plt.ylabel('Среднеквадратичная ошибка')
-        plt.legend()
+            plt.plot(x_test, y_predict, label="Model")
+            plt.scatter(x_train, y_train, edgecolor="r", s=20, label="Samples")
+            plt.xlabel("x")
+            plt.ylabel("y")
+            plt.legend(loc="best")
+            plt.title(
+                "Degree {}\nMSE = {:.2e}(+/- {:.2e})".format(
+                    degrees[i], -scores.mean(), scores.std()
+                )
+            )
         plt.show()
 
     def regression_model(self, x_train, y_train, x_test, y_test):
@@ -115,6 +128,7 @@ class Third:
         test_scores = []
 
         for alpha in alphas:
+            print(alpha)
             model = Ridge(alpha=alpha)
             model.fit(x_train, y_train)
 
