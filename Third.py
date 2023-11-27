@@ -2,7 +2,6 @@ import numpy as np
 from matplotlib import pyplot as plt
 from pandas import Series
 import pandas as pd
-from sklearn import datasets
 from sklearn.linear_model import LinearRegression, Ridge
 from sklearn.metrics import mean_squared_error, r2_score
 from sklearn.model_selection import train_test_split, cross_val_score
@@ -15,9 +14,6 @@ class Third:
     def __init__(self):
         self.start_work()
 
-    def true_fun(self, X):
-        return np.cos(1.5 * np.pi * X)
-
     def start_work(self):
         df_training = pd.read_csv("winequality_white.csv", sep=";")
         X = df_training[
@@ -25,10 +21,23 @@ class Third:
              "total sulfur dioxide", "density", "pH", "sulphates", "alcohol"]].values
         Y = df_training["quality"].values
 
-        # X, Y = datasets.load_diabetes(return_X_y=True)
         X = Y[:, np.newaxis]
 
         x_train, x_test, y_train, y_test = self.custom_train_test_split(X, Y)
+        self.learn_train_model(
+            x_train,
+            y_train,
+            x_test,
+            y_test
+        )
+
+        self.polynomial_feature(
+            x_train,
+            y_train,
+            x_test,
+            y_test
+        )
+
         self.regression_model(
             x_train,
             y_train,
@@ -38,9 +47,6 @@ class Third:
 
     def learn_train_model(self, x_train, y_train, x_test, y_test):
         model = LinearRegression()
-
-        print(x_test.shape)
-        print(y_test.shape)
 
         model.fit(x_train, y_train)
         y_pred = model.predict(x_test)
@@ -56,7 +62,6 @@ class Third:
         plt.xlabel("X")
         plt.show()
 
-        print("Coefficients: \n", model.coef_)
         print(f"Среднеквадратичная ошибка (MSE): {mse}")
         print(f"Кэф детерминизации: {R}")
 
@@ -89,9 +94,6 @@ class Third:
             ax = plt.subplot(1, len(degrees), i + 1)
             plt.setp(ax, xticks=(), yticks=())
 
-            print(x_train.shape)
-            print(y_train.shape)
-
             polynomial_features = PolynomialFeatures(degree=degrees[i], include_bias=False)
             linear_regression = LinearRegression()
             pipeline = Pipeline(
@@ -110,7 +112,7 @@ class Third:
             y_predict = pipeline.predict(x_test)
 
             plt.plot(x_test, y_predict, label="Model")
-            plt.scatter(x_train, y_train, edgecolor="r", s=20, label="Samples")
+            plt.scatter(x_test, y_test, edgecolor="r", s=20, label="Samples")
             plt.xlabel("x")
             plt.ylabel("y")
             plt.legend(loc="best")
@@ -123,6 +125,7 @@ class Third:
 
     def regression_model(self, x_train, y_train, x_test, y_test):
         alphas = np.logspace(-6, 6, 13)
+        print(alphas)
 
         train_scores = []
         test_scores = []

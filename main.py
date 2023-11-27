@@ -1,12 +1,10 @@
-import numpy
-
-import TestMl
+from Five import Five
+from Four_lab import Four_lab
 from Third import Third
 from First import First
 from Second import Second
 
 if __name__ == "__main__":
-    print("Выберите номер лаб.работы:")
     n = 3
     if n == 1:
         First().parse_file()
@@ -14,6 +12,9 @@ if __name__ == "__main__":
         Second().second_lab()
     elif n == 3:
         Third()
+    elif n == 4:
+        Four_lab()
+    elif n == 5:
+        Five()
     else:
-        TestMl.MyWork()
-        # print("Такой лабы нет!")
+        print("Такой лабы нет!")
