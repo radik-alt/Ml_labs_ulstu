@@ -28,7 +28,6 @@ class Four_lab:
         self.scaling(x_train, y_train, x_test, y_test)
 
     def custom_train_test_split(self, x: Series, y: Series, test_size=0.2, random_state=None, shuffle: bool = False):
-
         if random_state is not None:
             np.random.seed(random_state)
 
@@ -58,20 +57,33 @@ class Four_lab:
         self.mp_classifier(x_train_scaled, y_train, x_test_scaled, y_test)
 
     def perseptron(self, x_train_scaled, y_train, x_test_scaled, y_test):
-        perceptron = Perceptron()
+        perceptron = Perceptron(alpha=0.01, penalty="l1")
         perceptron.fit(x_train_scaled, y_train)
         y_pred_perceptron = perceptron.predict(x_test_scaled)
         accuracy_perceptron = accuracy_score(y_test, y_pred_perceptron)
         print(f'Accuracy of Perceptron: {accuracy_perceptron}')
 
+        train_sizes, train_scores, test_scores = learning_curve(perceptron, x_train_scaled, y_train)
+
+        train_scores_mean = np.mean(train_scores, axis=1)
+        test_scores_mean = np.mean(test_scores, axis=1)
+
+        plt.plot(train_sizes, train_scores_mean, label='Training score')
+        plt.plot(train_sizes, test_scores_mean, label='Cross-validation score')
+        plt.title('Perceptron Learning Curve')
+        plt.xlabel('Training Examples')
+        plt.ylabel('Accuracy Score')
+        plt.legend(loc='best')
+        plt.show()
+
     def mp_classifier(self, x_train_scaled, y_train, x_test_scaled, y_test):
-        mlp_classifier = MLPClassifier(max_iter=100000, learning_rate_init=0.001, alpha=0.01, solver='adam')
+        mlp_classifier = MLPClassifier(max_iter=100000, learning_rate_init=0.01, alpha=0.51, solver='adam')
         mlp_classifier.fit(x_train_scaled, y_train)
         y_pred_mlp = mlp_classifier.predict(x_test_scaled)
         accuracy_mlp = accuracy_score(y_test, y_pred_mlp)
         print(f'Accuracy of MLPClassifier: {accuracy_mlp}')
 
-        train_sizes, train_scores, test_scores = learning_curve(mlp_classifier, x_train_scaled, y_train, cv=5)
+        train_sizes, train_scores, test_scores = learning_curve(mlp_classifier, x_train_scaled, y_train)
 
         train_scores_mean = np.mean(train_scores, axis=1)
         test_scores_mean = np.mean(test_scores, axis=1)
@@ -83,5 +95,3 @@ class Four_lab:
         plt.ylabel('Accuracy Score')
         plt.legend(loc='best')
         plt.show()
-
-

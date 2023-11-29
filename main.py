@@ -5,7 +5,7 @@ from First import First
 from Second import Second
 
 if __name__ == "__main__":
-    n = 3
+    n = 4
     if n == 1:
         First().parse_file()
     elif n == 2:
