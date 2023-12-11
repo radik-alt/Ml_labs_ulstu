@@ -16,14 +16,11 @@ class Third:
 
     def start_work(self):
         df_training = pd.read_csv("winequality_white.csv", sep=";")
-        X = df_training[
-            ["fixed acidity", "volatile acidity", "citric acid", "residual sugar", "chlorides", "free sulfur dioxide",
-             "total sulfur dioxide", "density", "pH", "sulphates", "alcohol"]].values
-        Y = df_training["quality"].values
 
-        X = Y[:, np.newaxis]
+        X = df_training.iloc[:, :-1]
+        Y = df_training.iloc[:, -1]
 
-        x_train, x_test, y_train, y_test = self.custom_train_test_split(X, Y)
+        x_train, x_test, y_train, y_test = self.custom_train_test_split(X.values, Y.values)
         self.learn_train_model(
             x_train,
             y_train,
@@ -54,14 +51,6 @@ class Third:
         mse = mean_squared_error(y_test, y_pred)
         R = r2_score(y_test, y_pred)
 
-        plt.figure(figsize=(8, 10))
-        plt.scatter(x_test, y_test, color="blue", label="Test Data")
-        plt.plot(x_test, y_pred, color="red", label="Predict Data")
-        plt.title("Line Regression")
-        plt.ylabel("Y")
-        plt.xlabel("X")
-        plt.show()
-
         print(f"Среднеквадратичная ошибка (MSE): {mse}")
         print(f"Кэф детерминизации: {R}")
 
@@ -87,68 +76,35 @@ class Third:
         return X_train, X_test, y_train, y_test
 
     def polynomial_feature(self, x_train, y_train, x_test, y_test):
-        degrees = [5, 7]
+        degrees = range(1, 3)
+        train_errors, test_errors = [], []
+        for degree in degrees:
+            poly = PolynomialFeatures(degree=degree)
+            x_poly = poly.fit_transform(x_train)
+            lr_poly = LinearRegression()
+            lr_poly.fit(x_poly, y_train)
+            train_errors.append(r2_score(y_train, lr_poly.predict(poly.transform(x_train))))
+            test_errors.append(r2_score(y_test, lr_poly.predict(poly.transform(x_test))))
 
-        plt.figure(figsize=(14, 5))
-        for i in range(len(degrees)):
-            ax = plt.subplot(1, len(degrees), i + 1)
-            plt.setp(ax, xticks=(), yticks=())
-
-            polynomial_features = PolynomialFeatures(degree=degrees[i], include_bias=False)
-            linear_regression = LinearRegression()
-            pipeline = Pipeline(
-                [
-                    ("polynomial_features", polynomial_features),
-                    ("linear_regression", linear_regression),
-                ]
-            )
-
-            pipeline.fit(x_train, y_train)
-
-            scores = cross_val_score(
-                pipeline, x_train, y_train, scoring="neg_mean_squared_error", cv=10
-            )
-
-            y_predict = pipeline.predict(x_test)
-
-            plt.plot(x_test, y_predict, label="Model")
-            plt.scatter(x_test, y_test, edgecolor="r", s=20, label="Samples")
-            plt.xlabel("x")
-            plt.ylabel("y")
-            plt.legend(loc="best")
-            plt.title(
-                "Degree {}\nMSE = {:.2e}(+/- {:.2e})".format(
-                    degrees[i], -scores.mean(), scores.std()
-                )
-            )
+        plt.plot(degrees, train_errors, label='Train')
+        plt.plot(degrees, test_errors, label='Test')
+        plt.xlabel('Polymomial function')
+        plt.ylabel('R2')
+        plt.legend()
         plt.show()
 
     def regression_model(self, x_train, y_train, x_test, y_test):
-        alphas = np.logspace(-6, 6, 13)
-        print(alphas)
-
-        train_scores = []
-        test_scores = []
-
+        alphas = (0.01, 0.1, 0.5, 1, 1.5, 2)
+        train_errors, test_errors = [], []
         for alpha in alphas:
-            print(alpha)
-            model = Ridge(alpha=alpha)
-            model.fit(x_train, y_train)
+            ridge = Ridge(alpha=alpha)
+            ridge.fit(x_train, y_train)
+            train_errors.append(r2_score(y_train, ridge.predict(x_train)))
+            test_errors.append(r2_score(y_test, ridge.predict(x_test)))
 
-            y_train_pred = model.predict(x_train)
-            y_test_pred = model.predict(x_test)
-
-            mse_train = mean_squared_error(y_train, y_train_pred)
-            mse_test = mean_squared_error(y_test, y_test_pred)
-
-            train_scores.append(mse_train)
-            test_scores.append(mse_test)
-
-        plt.figure(figsize=(10, 6))
-        plt.semilogx(alphas, train_scores, label='Train MSE')
-        plt.semilogx(alphas, test_scores, label='Test MSE')
-        plt.xlabel('alpha')
-        plt.ylabel('Mean Squared Error')
-        plt.title('Зависимость MSE от alpha')
+        plt.plot(alphas, train_errors, label='Train')
+        plt.plot(alphas, test_errors, label='Test')
+        plt.xlabel('Ridge')
+        plt.ylabel('R2')
         plt.legend()
         plt.show()

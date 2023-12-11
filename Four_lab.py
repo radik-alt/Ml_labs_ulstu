@@ -77,7 +77,7 @@ class Four_lab:
         plt.show()
 
     def mp_classifier(self, x_train_scaled, y_train, x_test_scaled, y_test):
-        mlp_classifier = MLPClassifier(max_iter=100000, learning_rate_init=0.01, alpha=0.51, solver='adam')
+        mlp_classifier = MLPClassifier(max_iter=100000, learning_rate_init=0.01, alpha=0.51, learning_rate='adaptive')
         mlp_classifier.fit(x_train_scaled, y_train)
         y_pred_mlp = mlp_classifier.predict(x_test_scaled)
         accuracy_mlp = accuracy_score(y_test, y_pred_mlp)
