@@ -17,7 +17,7 @@ class Third:
     def start_work(self):
         df_training = pd.read_csv("data/winequality_white.csv", sep=";")
 
-        X = df_training.iloc[:, :-1]
+        X = df_training.iloc[:, :-2]
         Y = df_training.iloc[:, -1]
 
         x_train, x_test, y_train, y_test = self.custom_train_test_split(X.values, Y.values)
