@@ -1,5 +1,7 @@
+import numpy as np
 import pandas as pd
 from matplotlib import pyplot as plt
+from scipy.stats import stats
 from sklearn import datasets
 from sklearn.cluster import KMeans, AgglomerativeClustering, DBSCAN
 from sklearn.impute import SimpleImputer
@@ -12,18 +14,25 @@ class Five:
     def __init__(self):
         self.start_work()
 
+    def remove_outliers_iqr(self, df, features):
+        Q1 = df[features].quantile(0.25)
+        Q3 = df[features].quantile(0.75)
+        IQR = Q3 - Q1
+        return df[~((df[features] < (Q1 - 1.5 * IQR)) | (df[features] > (Q3 + 1.5 * IQR))).any(axis=1)]
+
     def start_work(self):
         df = pd.read_excel("data/oline_retail.xlsx")
-        features = df[["Quantity", "UnitPrice", "CustomerID"]].values
+        df = df.head(10000)
+        df_no_outliers = self.remove_outliers_iqr(df, ["Quantity", "UnitPrice"])
+        print("Исходный DataFrame:")
+        print(df.describe())
+        print("\nDataFrame без выбросов:")
+        print(df_no_outliers.describe())
+        feature = df_no_outliers[["Quantity", "UnitPrice"]]
 
-        # print(features)
-        # imputer = SimpleImputer(strategy='mean')
-        # features_imputed = imputer.fit_transform(features)
-
-        self.scalling(features)
+        self.scalling(feature.values)
 
     def scalling(self, x):
-        print(x)
         scaler = StandardScaler()
         x_scaled = scaler.fit_transform(x)
         self.classification(x_scaled)

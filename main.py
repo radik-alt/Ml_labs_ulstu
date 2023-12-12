@@ -1,8 +1,8 @@
-from Five import Five
-from Four_lab import Four_lab
-from Third import Third
-from First import First
-from Second import Second
+from labs.five.Five import Five
+from labs.four.Four_lab import Four_lab
+from labs.third.Third import Third
+from labs.first.First import First
+from labs.second.Second import Second
 
 if __name__ == "__main__":
     n = 3

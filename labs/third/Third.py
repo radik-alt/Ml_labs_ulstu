@@ -15,7 +15,7 @@ class Third:
         self.start_work()
 
     def start_work(self):
-        df_training = pd.read_csv("winequality_white.csv", sep=";")
+        df_training = pd.read_csv("data/winequality_white.csv", sep=";")
 
         X = df_training.iloc[:, :-1]
         Y = df_training.iloc[:, -1]
@@ -77,14 +77,22 @@ class Third:
 
     def polynomial_feature(self, x_train, y_train, x_test, y_test):
         degrees = range(1, 3)
-        train_errors, test_errors = [], []
+        train_errors = []
+        test_errors = []
         for degree in degrees:
             poly = PolynomialFeatures(degree=degree)
             x_poly = poly.fit_transform(x_train)
-            lr_poly = LinearRegression()
-            lr_poly.fit(x_poly, y_train)
-            train_errors.append(r2_score(y_train, lr_poly.predict(poly.transform(x_train))))
-            test_errors.append(r2_score(y_test, lr_poly.predict(poly.transform(x_test))))
+            model = LinearRegression()
+            model.fit(x_poly, y_train)
+
+            y_predict_train = model.predict(poly.transform(x_train))
+            y_predict_test = model.predict(poly.transform(x_test))
+
+            mse_train = r2_score(y_train, y_predict_train)
+            mse_test = r2_score(y_test, y_predict_test)
+
+            train_errors.append(mse_train)
+            test_errors.append(mse_test)
 
         plt.plot(degrees, train_errors, label='Train')
         plt.plot(degrees, test_errors, label='Test')
@@ -94,13 +102,18 @@ class Third:
         plt.show()
 
     def regression_model(self, x_train, y_train, x_test, y_test):
-        alphas = (0.01, 0.1, 0.5, 1, 1.5, 2)
-        train_errors, test_errors = [], []
+        alphas = np.logspace(-6, 6, 13)
+        test_errors = []
+        train_errors = []
         for alpha in alphas:
             ridge = Ridge(alpha=alpha)
             ridge.fit(x_train, y_train)
-            train_errors.append(r2_score(y_train, ridge.predict(x_train)))
-            test_errors.append(r2_score(y_test, ridge.predict(x_test)))
+
+            y_predict_train = ridge.predict(x_train)
+            y_predict_test = ridge.predict(x_test)
+
+            train_errors.append(r2_score(y_train, y_predict_train))
+            test_errors.append(r2_score(y_test, y_predict_test))
 
         plt.plot(alphas, train_errors, label='Train')
         plt.plot(alphas, test_errors, label='Test')

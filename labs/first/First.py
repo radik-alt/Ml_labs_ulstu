@@ -8,7 +8,7 @@ class First:
         print()
 
     def parse_file(self):
-        data = pd.read_csv('titanic_train.csv')
+        data = pd.read_csv('data/titanic_train.csv')
         self.first_lab(data)
 
     def first_lab(self, data: DataFrame):

@@ -15,16 +15,12 @@ class Four_lab:
         self.start_work()
 
     def start_work(self):
-        df_training = pd.read_csv("winequality_white.csv", sep=";")
-        X = df_training[
-            ["fixed acidity", "volatile acidity", "citric acid", "residual sugar", "chlorides", "free sulfur dioxide",
-             "total sulfur dioxide", "density", "pH", "sulphates", "alcohol"]].values
-        Y = df_training["quality"].values
+        df_training = pd.read_csv("data/winequality_white.csv", sep=";")
 
-        # X, Y = datasets.load_diabetes(return_X_y=True)
-        X = Y[:, np.newaxis]
+        X = df_training.iloc[:, :-1]
+        Y = df_training.iloc[:, -1]
 
-        x_train, x_test, y_train, y_test = self.custom_train_test_split(X, Y)
+        x_train, x_test, y_train, y_test = self.custom_train_test_split(X.values, Y.values)
         self.scaling(x_train, y_train, x_test, y_test)
 
     def custom_train_test_split(self, x: Series, y: Series, test_size=0.2, random_state=None, shuffle: bool = False):
